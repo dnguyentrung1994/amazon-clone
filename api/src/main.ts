@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './modules/app.module';
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -16,6 +16,7 @@ import fastifyHelmet from '@fastify/helmet';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/exception-filter';
 import { RequestLogger } from './common/winston/request-logger';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -78,7 +79,7 @@ async function bootstrap() {
   });
 
   //registering fastify helmet middleware
-  app.register(fastifyHelmet, {
+  await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: [`'self'`],
@@ -89,11 +90,15 @@ async function bootstrap() {
     },
   });
 
+  await app.register(fastifyCookie, {
+    secret: app.get(ConfigService).get<string>('FASTIFY_SECRET'),
+  });
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new RequestLogger());
   //registering fastify cookies middleware
-  await app.register(fastifyCookie);
+
   await app.listen(3000, '0.0.0.0');
 }
 bootstrap();
