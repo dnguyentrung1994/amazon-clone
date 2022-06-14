@@ -6,9 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DatabaseError } from 'pg-protocol';
 import { QueryFailedError, Repository } from 'typeorm';
-import { UserSignUpDTO } from '../user/user.dto';
+import { UserLoginDTO } from '../user/user.dto';
 import User from '../user/user.entity';
 import { IUser } from '../user/user.interface';
+import { comparePassword } from './utils';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,25 @@ export class AuthService {
     private userRepository: Repository<User>,
   ) {}
 
-  async addUser(userData: UserSignUpDTO) {
+  async validateUser(loginData: UserLoginDTO) {
+    const user = await this.userRepository.findOne({
+      where: [
+        {
+          username: loginData.identification,
+        },
+        {
+          email: loginData.identification,
+        },
+        {
+          phoneNumber: loginData.identification,
+        },
+      ],
+    });
+    if (await comparePassword(loginData.password, user.password)) return user;
+    return undefined;
+  }
+
+  async addUser(userData: Omit<IUser, 'id' | 'addresses'>) {
     try {
       return (
         await this.userRepository
@@ -33,7 +52,7 @@ export class AuthService {
         const queryError = error.driverError as DatabaseError;
 
         if (queryError.code === '23505') {
-          throw new ConflictException('username already exist');
+          throw new ConflictException('email is already in use');
         }
         throw new InternalServerErrorException(queryError);
       }

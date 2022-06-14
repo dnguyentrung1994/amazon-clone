@@ -1,13 +1,20 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { IUser } from './user.interface';
 
 @Entity('user')
+@Unique('userIdentity', ['email', 'username', 'phoneNumber'])
 export default class UserEntity implements IUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ nullable: true })
+  email?: string;
+
+  @Column({ nullable: true })
+  username?: string;
+
+  @Column({ nullable: true })
+  phoneNumber?: string;
 
   @Column()
   password: string;
@@ -18,8 +25,8 @@ export default class UserEntity implements IUser {
   @Column()
   lastName: string;
 
-  @Column()
-  birthday: Date;
+  @Column('date')
+  birthday: string;
 
   @Column({ array: true, default: [], type: 'text' })
   addresses: string[];

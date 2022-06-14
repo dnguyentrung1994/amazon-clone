@@ -3,12 +3,14 @@ import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiHeader,
+  ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserSignUpDTO } from '../user/user.dto';
+import { IUser } from '../user/user.interface';
 import { AuthService } from './auth.service';
 import { hashPassword } from './utils';
+import { mapIUserHidingPassword, mapIUserSignUpToIUser } from './utils/mapper';
 
 @ApiTags('Authorization')
 @Controller('auth')
@@ -18,22 +20,23 @@ export class AuthController {
     private readonly logger: Logger,
   ) {}
 
-  @ApiHeader({
-    name: 'Sign Up',
+  @ApiOperation({
     description: 'Save user data into Database',
   })
   @ApiCreatedResponse({ description: 'User data saved successfully' })
   @ApiBadRequestResponse({ description: 'Bad user data' })
   @ApiConflictResponse({ description: 'Duplicated email' })
-  @Post('test')
-  async checkDTO(@Body() userData: UserSignUpDTO) {
+  @Post('signup')
+  async checkDTO(
+    @Body() userData: UserSignUpDTO,
+  ): Promise<Omit<IUser, 'password'>> {
     try {
-      const data: UserSignUpDTO = {
+      const data = mapIUserSignUpToIUser({
         ...userData,
         password: await hashPassword(userData.password),
-      };
+      });
 
-      return (await this.authService.addUser(data)) as UserSignUpDTO;
+      return mapIUserHidingPassword(await this.authService.addUser(data));
     } catch (error) {
       this.logger.error(error);
       throw error;
