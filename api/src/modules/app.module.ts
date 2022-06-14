@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { getEnvPath } from '../common/helpers/env.helper';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { AuthModule } from './auth';
 
 const envFilePath: string = getEnvPath(__dirname + `/../common/envs`);
 @Module({
@@ -47,7 +48,6 @@ const envFilePath: string = getEnvPath(__dirname + `/../common/envs`);
         entities: [join(__dirname, '..', '**/*.entity.ts')],
         migrationsTableName: 'migration',
         migrations: ['./src/migration/*.{js,ts}'],
-        // migrations: ['../migration/*.{js,ts}'],
         ssl: configService.get<string>('NODE_ENV') === 'production',
         autoLoadEntities: true,
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
@@ -62,6 +62,7 @@ const envFilePath: string = getEnvPath(__dirname + `/../common/envs`);
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

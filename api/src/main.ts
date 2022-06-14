@@ -99,6 +99,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(new RequestLogger());
   //registering fastify cookies middleware
 
-  await app.listen(3000, '0.0.0.0');
+  await app.listen(app.get(ConfigService).get<number>('API_PORT'), '0.0.0.0');
 }
 bootstrap();
