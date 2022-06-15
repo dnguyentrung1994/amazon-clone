@@ -2,13 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { IUser } from '../../user/user.interface';
 import { ITokenPayload } from '../auth.interface';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class AccessStrategy extends PassportStrategy(
+export class RefreshStrategy extends PassportStrategy(
   Strategy,
-  'accessStrategy',
+  'refreshStrategy',
 ) {
   constructor(
     private readonly authService: AuthService,
@@ -17,22 +18,19 @@ export class AccessStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request) => {
-          return request.headers.authorization
-            ? request.headers.authorization.split(' ')[0] === 'Bearer'
-              ? request.headers.authorization.split(' ')[1]
-              : ''
-            : '';
+          console.log(request.cookies);
+          return request.cookies['refreshToken'];
         },
       ]),
-      ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_ACCESS_TOKEN'),
+      ignoreExpiration: true,
+      secretOrKey: configService.get<string>('JWT_REFRESH_TOKEN'),
     });
   }
 
-  async validate(payload: ITokenPayload) {
+  async validate(payload: ITokenPayload): Promise<Omit<IUser, 'password'>> {
     try {
       const user = await this.authService.validateViaAccessToken(payload);
-      if (!user) throw new UnauthorizedException('Access token is invalid!');
+      if (!user) throw new UnauthorizedException('Refresh token is invalid!');
       return user;
     } catch (error) {
       throw error;

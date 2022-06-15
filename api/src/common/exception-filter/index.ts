@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { format } from 'date-fns';
 import { FastifyReply, FastifyRequest } from 'fastify';
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -34,7 +35,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     response.status(status).send({
       statusCode: status,
-      timestamps: new Date().toUTCString(),
+      time: format(new Date(), 'PPPPpppp'),
       path: request.url,
       message,
     });

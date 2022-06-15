@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 import { parseISO } from 'date-fns';
 import { AtLeastOneNotEmptyString } from 'src/common/decorators/customValidator/AtLeastOneNotEmptyString';
@@ -15,9 +16,10 @@ export class UserSignUpDTO implements IUserSignUp {
    * User's email address
    * @example 'abc@gmail.com'
    */
+  @ValidateIf((object) => !object.username && !object.phoneNumber)
   @AtLeastOneNotEmptyString(['email', 'username', 'phoneNumber'], {
     message:
-      "email is not set. At least one of 'email', 'username' or 'phoneNumber'",
+      "email is not set. At least one of 'email', 'username' or 'phoneNumber' needs to be defined",
   })
   @IsEmail({})
   email?: string;
@@ -25,16 +27,20 @@ export class UserSignUpDTO implements IUserSignUp {
    * User's username
    * @example 'JohnDoe01'
    */
+  @ValidateIf((object) => !object.email && !object.phoneNumber)
   @AtLeastOneNotEmptyString(['email', 'username', 'phoneNumber'], {
-    message: "username can't be empty while ",
+    message:
+      "username is not set. At least one of 'email', 'username' or 'phoneNumber' needs to be defined",
   })
   username?: string;
   /**
    * User's phone number
    * @example '+4123456789'
    */
+  @ValidateIf((object) => !object.email && !object.username)
   @AtLeastOneNotEmptyString(['email', 'username', 'phoneNumber'], {
-    message: "phone number can't be empty while ",
+    message:
+      "phone number is not set. At least one of 'email', 'username' or 'phoneNumber' needs to be defined",
   })
   @IsPhoneNumber()
   phoneNumber?: string;

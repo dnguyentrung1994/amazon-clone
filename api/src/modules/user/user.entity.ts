@@ -4,7 +4,7 @@ import { IUser } from './user.interface';
 @Entity('user')
 @Unique('userIdentity', ['email', 'username', 'phoneNumber'])
 export default class UserEntity implements IUser {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('uuid', { name: 'userID' })
   id: string;
 
   @Column({ nullable: true })

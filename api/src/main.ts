@@ -67,9 +67,25 @@ async function bootstrap() {
       .setTitle('store api')
       .setVersion('1.1')
       .setDescription('placeholder')
+      .addBasicAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'Authorization',
+      )
+      .addCookieAuth('refreshToken')
       .build(),
   );
-  SwaggerModule.setup('docs', app, swaggerDocument);
+  SwaggerModule.setup('docs', app, swaggerDocument, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  });
 
   //CORS settings
   app.enableCors({
