@@ -29,7 +29,7 @@ import { RefreshAuthGuard } from './auth-guard/refresh.guard';
 import { ILoginRequest } from './auth.interface';
 import { AuthService } from './auth.service';
 import { hashPassword } from './utils';
-import { mapIUserHidingPassword, mapIUserSignUpToIUser } from './utils/mapper';
+import { mapIUserSignUpToIUser } from './utils/mapper';
 
 @ApiTags('Authorization')
 @Controller('auth')
@@ -50,24 +50,23 @@ export class AuthController {
   async signUp(
     @Body() userData: UserSignUpDTO,
     @Res({ passthrough: true }) res: FastifyReply,
-  ): Promise<Omit<IUser, 'password'>> {
+  ): Promise<Omit<IUser, 'password'> | undefined> {
     try {
       const data = mapIUserSignUpToIUser({
         ...userData,
         password: await hashPassword(userData.password),
       });
 
-      const newUser = mapIUserHidingPassword(
-        await this.authService.addUser(data),
-      );
+      const newUser = await this.authService.addUser(data);
+      if (newUser) {
+        const tokens = this.authService.generateTokens(newUser.id);
 
-      const tokens = this.authService.generateTokens(newUser.id);
-
-      this.authService.generateRefreshCookie(res, tokens.refreshToken);
-      return res.status(HttpStatus.CREATED).send({
-        ...tokens,
-        ...newUser,
-      });
+        this.authService.generateRefreshCookie(res, tokens.refreshToken);
+        return res.status(HttpStatus.CREATED).send({
+          ...tokens,
+          ...newUser,
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       throw error;

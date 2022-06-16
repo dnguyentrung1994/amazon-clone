@@ -1,7 +1,10 @@
-import { CacheModule, Module } from '@nestjs/common';
+import {
+  // CacheModule,
+  Module,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import * as RedisStore from 'cache-manager-redis-store';
+// import * as RedisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { getEnvPath } from '../common/helpers/env.helper';
@@ -11,7 +14,9 @@ import { AuthModule } from './auth';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessAuthGuard } from './auth/auth-guard/access.guard';
 
-const envFilePath: string = getEnvPath(__dirname + `/../common/envs`);
+const envFilePath: string | undefined = getEnvPath(
+  __dirname + `/../common/envs`,
+);
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,20 +63,21 @@ const envFilePath: string = getEnvPath(__dirname + `/../common/envs`);
       inject: [ConfigService],
     }),
     AuthModule,
-    CacheModule.register({
-      store: RedisStore,
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT,
-      ttl: Number(process.env.REDIS_TTL) ?? 3600,
-      isGlobal: true,
-    }),
+    // CacheModule.register({
+    //   store: RedisStore,
+    //   host: process.env.REDIS_HOST,
+    //   port: process.env.REDIS_PORT,
+    //   ttl: Number(process.env.REDIS_TTL) ?? 3600,
+    //   isGlobal: true,
+    // }),
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    AccessAuthGuard,
     {
       provide: APP_GUARD,
-      useClass: AccessAuthGuard,
+      useExisting: AccessAuthGuard,
     },
   ],
 })

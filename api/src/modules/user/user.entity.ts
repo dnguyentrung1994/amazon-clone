@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
 import { IUser } from './user.interface';
 
 @Entity('user')
@@ -30,4 +38,19 @@ export default class UserEntity implements IUser {
 
   @Column({ array: true, default: [], type: 'text' })
   addresses: string[];
+
+  @CreateDateColumn({
+    type: 'timestamp without time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createDate: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp without time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  updateDate: Date;
+
+  @DeleteDateColumn({ type: 'timestamp without time zone' })
+  deletedAt?: Date;
 }

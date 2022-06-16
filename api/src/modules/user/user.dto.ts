@@ -8,7 +8,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { parseISO } from 'date-fns';
-import { AtLeastOneNotEmptyString } from 'src/common/decorators/customValidator/AtLeastOneNotEmptyString';
+import { AtLeastOneNotEmptyString } from '../../common/decorators/customValidator/AtLeastOneNotEmptyString';
 import { IUserSignUp } from './user.interface';
 
 export class UserSignUpDTO implements IUserSignUp {

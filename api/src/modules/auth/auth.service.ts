@@ -9,12 +9,13 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FastifyReply } from 'fastify';
 import { DatabaseError } from 'pg-protocol';
-import { QueryFailedError, Repository } from 'typeorm';
+import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
 import { UserLoginDTO } from '../user/user.dto';
 import User from '../user/user.entity';
 import { IUser } from '../user/user.interface';
 import { IJwtToken, ITokenPayload } from './auth.interface';
 import { comparePassword } from './utils';
+import { find } from 'lodash';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +28,7 @@ export class AuthService {
 
   async validateUser(
     loginData: UserLoginDTO,
-  ): Promise<Omit<IUser, 'password' | undefined>> {
+  ): Promise<Omit<User, 'password'> | undefined> {
     const user = await this.userRepository.findOne({
       where: [
         {
@@ -41,16 +42,18 @@ export class AuthService {
         },
       ],
     });
-    if (await comparePassword(loginData.password, user.password)) {
-      const { password: _, ...result } = user;
-      return result;
+    if (user) {
+      if (await comparePassword(loginData.password, user.password)) {
+        const { password: _, ...result } = user;
+        return result;
+      }
     }
     return undefined;
   }
 
   async validateViaAccessToken(
     token: ITokenPayload,
-  ): Promise<Omit<IUser, 'password' | undefined>> {
+  ): Promise<Omit<IUser, 'password'> | undefined> {
     const { id } = token;
     const user = await this.userRepository.findOne({
       where: {
@@ -64,20 +67,45 @@ export class AuthService {
     return undefined;
   }
 
-  async addUser(userData: Omit<IUser, 'id' | 'addresses'>): Promise<IUser> {
+  async addUser(
+    userData: Omit<IUser, 'id' | 'addresses'>,
+  ): Promise<Omit<User, 'password'> | undefined> {
     try {
       if (!userData.email && !userData.phoneNumber && !userData.username) {
         throw new BadRequestException("user's identification is missing");
       }
-      return (
-        await this.userRepository
-          .createQueryBuilder()
-          .insert()
-          .into(User)
-          .values([userData])
-          .returning('*')
-          .execute()
-      ).generatedMaps[0] as IUser;
+
+      const userQueryConditions: FindOptionsWhere<User>[] = [];
+      if (userData.email) userQueryConditions.push({ email: userData.email });
+      if (userData.username)
+        userQueryConditions.push({ email: userData.username });
+      if (userData.phoneNumber)
+        userQueryConditions.push({ email: userData.phoneNumber });
+
+      const userCheck = await this.userRepository.find({
+        where: userQueryConditions,
+      });
+
+      const messages: string[] = [];
+      if (userCheck.length !== 0) {
+        if (find(userCheck, (user) => user.email === userData.email))
+          messages.push('email is already in use');
+        if (find(userCheck, (user) => user.username === userData.username))
+          messages.push('username already exists');
+        if (
+          find(userCheck, (user) => user.phoneNumber === userData.phoneNumber)
+        )
+          messages.push('phone number is already in use');
+      }
+
+      if (messages.length !== 0) {
+        const err = new BadRequestException(messages);
+        console.log(err);
+        throw err;
+      }
+
+      await this.userRepository.insert(userData);
+      return userData as unknown as Omit<User, 'password'>;
     } catch (error: unknown) {
       if (error instanceof QueryFailedError) {
         const queryError = error.driverError as DatabaseError;
