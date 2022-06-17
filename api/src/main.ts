@@ -67,9 +67,25 @@ async function bootstrap() {
       .setTitle('store api')
       .setVersion('1.1')
       .setDescription('placeholder')
+      .addBasicAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'Authorization',
+      )
+      .addCookieAuth('refreshToken')
       .build(),
   );
-  SwaggerModule.setup('docs', app, swaggerDocument);
+  SwaggerModule.setup('docs', app, swaggerDocument, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  });
 
   //CORS settings
   app.enableCors({
@@ -98,6 +114,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new RequestLogger());
   //registering fastify cookies middleware
+
   await app.listen(app.get(ConfigService).get<number>('API_PORT'), '0.0.0.0');
 }
 bootstrap();
