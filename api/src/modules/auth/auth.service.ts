@@ -100,12 +100,12 @@ export class AuthService {
 
       if (messages.length !== 0) {
         const err = new BadRequestException(messages);
-        console.log(err);
         throw err;
       }
 
       await this.userRepository.insert(userData);
-      return userData as unknown as Omit<User, 'password'>;
+      const { password: _, ...result } = userData;
+      return result as unknown as Omit<User, 'password'>;
     } catch (error: unknown) {
       if (error instanceof QueryFailedError) {
         const queryError = error.driverError as DatabaseError;

@@ -139,9 +139,9 @@ export class AuthController {
     const { user } = req;
     const tokens = this.authService.generateTokens(user.id);
     this.authService.generateRefreshCookie(res, tokens.refreshToken);
-    return {
+    return res.status(HttpStatus.OK).send({
       ...tokens,
       ...user,
-    };
+    });
   }
 }

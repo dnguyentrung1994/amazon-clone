@@ -23,11 +23,19 @@ const envFilePath: string | undefined = getEnvPath(
       envFilePath,
       isGlobal: true,
       validationSchema: Joi.object({
+        NODE_ENV: Joi.string()
+          .required()
+          .allow('development', 'production', 'test'),
+
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.number().required(),
         DATABASE_NAME: Joi.string().required(),
         DATABASE_USER: Joi.string().required(),
         DATABASE_PASSWORD: Joi.string().required(),
+        DATABASE_TEST: Joi.string().when('NODE_ENV', {
+          is: 'test',
+          then: Joi.required(),
+        }),
 
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
@@ -52,8 +60,12 @@ const envFilePath: string | undefined = getEnvPath(
         port: configService.get<number>('DATABASE_PORT'),
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
-        database: configService.get<string>('DATABASE_NAME'),
+        database:
+          configService.get('NODE_ENV') === 'test'
+            ? configService.get<string>('DATABASE_TEST')
+            : configService.get<string>('DATABASE_NAME'),
         entities: [join(__dirname, '..', '**/*.entity.ts')],
+        dropSchema: configService.get<string>('NODE_ENV') === 'test',
         migrationsTableName: 'migration',
         migrations: ['./src/migration/*.{js,ts}'],
         ssl: configService.get<string>('NODE_ENV') === 'production',
