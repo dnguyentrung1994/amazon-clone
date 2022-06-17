@@ -1,15 +1,14 @@
-import {
-  // CacheModule,
-  Module,
-} from '@nestjs/common';
+
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-// import * as RedisStore from 'cache-manager-redis-store';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { getEnvPath } from '../common/helpers/env.helper';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+
 import { AuthModule } from './auth';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessAuthGuard } from './auth/auth-guard/access.guard';
@@ -17,6 +16,7 @@ import { AccessAuthGuard } from './auth/auth-guard/access.guard';
 const envFilePath: string | undefined = getEnvPath(
   __dirname + `/../common/envs`,
 );
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,7 +26,7 @@ const envFilePath: string | undefined = getEnvPath(
         NODE_ENV: Joi.string()
           .required()
           .allow('development', 'production', 'test'),
-
+        
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.number().required(),
         DATABASE_NAME: Joi.string().required(),
@@ -36,6 +36,7 @@ const envFilePath: string | undefined = getEnvPath(
           is: 'test',
           then: Joi.required(),
         }),
+
 
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
@@ -60,6 +61,7 @@ const envFilePath: string | undefined = getEnvPath(
         port: configService.get<number>('DATABASE_PORT'),
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
+
         database:
           configService.get('NODE_ENV') === 'test'
             ? configService.get<string>('DATABASE_TEST')
@@ -75,13 +77,6 @@ const envFilePath: string | undefined = getEnvPath(
       inject: [ConfigService],
     }),
     AuthModule,
-    // CacheModule.register({
-    //   store: RedisStore,
-    //   host: process.env.REDIS_HOST,
-    //   port: process.env.REDIS_PORT,
-    //   ttl: Number(process.env.REDIS_TTL) ?? 3600,
-    //   isGlobal: true,
-    // }),
   ],
   controllers: [AppController],
   providers: [

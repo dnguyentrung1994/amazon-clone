@@ -5,7 +5,9 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+
 import { format } from 'date-fns';
+
 import { FastifyReply, FastifyRequest } from 'fastify';
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {

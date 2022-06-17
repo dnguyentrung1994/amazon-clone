@@ -260,4 +260,9 @@ describe('AppController (e2e)', () => {
   afterAll(async () => {
     await app.close();
   });
+
+  afterAll((done) => {
+    app.close();
+    done();
+  });
 });
