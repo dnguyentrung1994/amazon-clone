@@ -3,25 +3,27 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { IUser } from './user.interface';
 
 @Entity('user')
-@Unique('userIdentity', ['email', 'username', 'phoneNumber'])
 export default class UserEntity implements IUser {
   @PrimaryGeneratedColumn('uuid', { name: 'userID' })
   id: string;
 
   @Column({ nullable: true })
+  @Index({ unique: true, where: '"email" is not NULL' })
   email?: string;
 
   @Column({ nullable: true })
+  @Index({ unique: true, where: '"username" is not NULL' })
   username?: string;
 
   @Column({ nullable: true })
+  @Index({ unique: true, where: '"phoneNumber" is not NULL' })
   phoneNumber?: string;
 
   @Column()
